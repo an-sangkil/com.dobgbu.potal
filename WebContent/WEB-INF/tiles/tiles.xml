@@ -1,0 +1,40 @@
+<!DOCTYPE tiles-definitions PUBLIC 
+        "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" 
+        "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">  
+<tiles-definitions>   
+ 
+	<definition name="tilesbase"  template="/layout/user/userLayout.jsp">   
+	    <put-attribute name="title" value="" />        
+	    <put-attribute name="header" value="/layout/user/userHeader.jsp" />   
+	    <put-attribute name="sidebarMenu" value="/layout/user/userSidebarMenu.jsp" />      
+	    <put-attribute name="body" value="" />       
+	    <put-attribute name="footer" value="/layout/user/userFooter.jsp" />   
+	</definition>
+	
+	<definition name="tilesMain"  template="/layout/user/userLayout.jsp">   
+	    <put-attribute name="title" value="" />        
+	    <put-attribute name="header" value="/layout/user/userHeader.jsp" />   
+	    <put-attribute name="body" value="" />       
+	    <put-attribute name="footer" value="/layout/user/userFooter.jsp" />   
+	</definition>     
+	
+	<!-- 메인 화면 -->
+	<definition name="user/main/*/*.tiles" extends="tilesMain">    
+	    <put-attribute name="title" value="SOFOS CODING" />
+	    <put-attribute name="body" value="/main.jsp" />    
+	</definition>
+	
+	<!-- 공통 사용자 화면 -->
+	<definition name="user/common/*/*.tiles" extends="tilesbase">
+		<put-attribute name="title" value="SOFOS CODING" />
+	    <put-attribute name="body" value="/user/{1}/{2}.jsp" />
+	</definition>
+	
+	<!-- 컨텐츠-->
+	<definition name="user/contents/*/*.tiles" extends="tilesbase">    
+	    <put-attribute name="title" value="SOFOS CODING" />
+	    <put-attribute name="body" value="/user/{1}/{2}.jsp" />    
+	</definition>
+	
+	 
+</tiles-definitions>

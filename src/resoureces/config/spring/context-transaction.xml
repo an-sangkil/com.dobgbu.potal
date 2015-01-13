@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+  
+	<!-- 
+	/////////////////////////////////////////////////////////////////
+	// DATASOURCE
+	/////////////////////////////////////////////////////////////////
+	-->
+	
+<!-- 	<context:annotation-config/> -->
+	<tx:annotation-driven transaction-manager="txManager" proxy-target-class="true"/>
+	
+	<context:property-placeholder location="classpath:/properties/jdbc.properties"/>
+	
+	<beans:bean id="dataSourceSpied"  class="org.apache.commons.dbcp.BasicDataSource"  destroy-method="close">
+		<beans:property name="driverClassName" value="${jdbc.driverClassName}"/>
+		<beans:property name="url" value="${jdbc.url}"/>
+		<beans:property name="username" value="${jdbc.username}"/>
+		<beans:property name="password" value="${jdbc.password}"/>
+		<beans:property name="initialSize" value="10"/>
+		<beans:property name="maxActive" value="30"/>
+		<beans:property name="maxIdle" value="10"/>
+		<beans:property name="maxWait" value="1000"/>
+		<beans:property name="validationQuery" value="select 1" />
+	</beans:bean>
+	
+	<beans:bean id="dataSource" class="net.sf.log4jdbc.Log4jdbcProxyDataSource">
+		<beans:constructor-arg ref="dataSourceSpied" />
+	</beans:bean>
+	
+	<beans:bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<beans:property name="dataSource" ref="dataSource"></beans:property>
+	</beans:bean>
+
+	<beans:bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<beans:property name="dataSource" ref="dataSource"/>
+		<beans:property name="configLocation" value="classpath:sqlmap/sqlMapConfig.xml"/>
+		<beans:property name="mapperLocations">
+		    	<beans:list>
+					<beans:value>classpath*:com/**/dao/xml/*.xml</beans:value>		    	    
+		    	</beans:list>
+        </beans:property>
+	</beans:bean>
+	<beans:bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate"> 
+		<beans:constructor-arg ref="sqlSessionFactory"/> 
+	</beans:bean>
+
+    <aop:config>                                
+        <aop:pointcut id="serviceTx" expression="execution(* com..*Service.*(..))"/>
+        <aop:pointcut id="daoTx"     expression="execution(* com..*Dao.*(..))"/>
+        
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceTx" />
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="daoTx" />
+    </aop:config>
+
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="insert*" propagation="REQUIRED" rollback-for="Throwable"/>
+            <tx:method name="regist*" propagation="REQUIRED" rollback-for="Throwable"/>
+            <tx:method name="update*" propagation="REQUIRED" />
+            <tx:method name="delete*" propagation="REQUIRED" />
+            <tx:method name="remove*" propagation="REQUIRED" />
+            <tx:method name="save*"   propagation="REQUIRED" />
+            <tx:method name="*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+</beans:beans>
